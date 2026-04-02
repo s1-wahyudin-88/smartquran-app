@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0,
+                 maximum-scale=1.0, user-scalable=no">
+  <title>Smart Quran — Ribath Iqra</title>
+
+  <!-- PWA & Theme -->
+  <meta name="theme-color" content="#1F4E79">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent">
+  <link rel="manifest" href="./manifest.json">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 1. OFFLINE BANNER                           -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="offline-banner" class="offline-banner">
+    📴 Mode Offline — Data akan tersimpan dan dikirim saat online
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 2. OVERLAY PIN                              -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="pin-overlay" class="modal-overlay active">
+    <div class="modal-box">
+      <div class="text-center mb-3">
+        <div style="font-size:2rem">🔐</div>
+        <div class="modal-title">Masukkan PIN</div>
+        <div class="text-muted text-sm">Smart Quran · Ribath Iqra</div>
+      </div>
+      <div class="pin-input-row">
+        <input id="pin-1" type="password" inputmode="numeric"
+               maxlength="1" class="pin-input"
+               aria-label="Digit PIN ke-1">
+        <input id="pin-2" type="password" inputmode="numeric"
+               maxlength="1" class="pin-input"
+               aria-label="Digit PIN ke-2">
+        <input id="pin-3" type="password" inputmode="numeric"
+               maxlength="1" class="pin-input"
+               aria-label="Digit PIN ke-3">
+        <input id="pin-4" type="password" inputmode="numeric"
+               maxlength="1" class="pin-input"
+               aria-label="Digit PIN ke-4">
+      </div>
+      <div id="pin-error" class="hidden text-danger text-center">
+        PIN salah, coba lagi
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 3. HEADER (fixed)                           -->
+  <!-- ═══════════════════════════════════════════ -->
+  <header class="header" id="main-header">
+    <div>
+      <div class="header-title">🏛️ Ribath Iqra</div>
+      <div class="header-date" id="header-date"></div>
+    </div>
+    <button class="header-notif" id="btn-notif" aria-label="Notifikasi">
+      🔔
+      <span class="notif-badge hidden" id="notif-badge">0</span>
+    </button>
+  </header>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 4. PANEL NOTIFIKASI                         -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="notif-overlay" id="notif-overlay"></div>
+  <div class="notif-panel" id="notif-panel">
+    <div class="flex-between mb-2">
+      <strong>Notifikasi</strong>
+      <button id="btn-close-notif" aria-label="Tutup panel notifikasi">✕</button>
+    </div>
+    <div id="notif-content">Memuat...</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 5. MAIN CONTENT                             -->
+  <!-- ═══════════════════════════════════════════ -->
+  <main id="main-content" style="padding-top: 68px">
+
+    <!-- TAB DASHBOARD -->
+    <div id="tab-dashboard" class="tab-content active">
+      <div id="kartu-absensi" class="card"></div>
+      <div id="kartu-catatan" class="card"></div>
+      <div class="metric-row" id="kartu-metrik"></div>
+      <div id="kartu-tindakan" class="card hidden"></div>
+      <div id="kartu-spp" class="card"></div>
+      <div id="kartu-grafik" class="card"></div>
+    </div>
+
+    <!-- TAB FEED -->
+    <div id="tab-feed" class="tab-content">
+      <select id="feed-filter" class="w-full mb-2"
+              aria-label="Filter santri pada feed">
+        <option value="">Semua Santri</option>
+      </select>
+      <div id="feed-list">Memuat...</div>
+    </div>
+
+    <!-- TAB SANTRI -->
+    <div id="tab-santri" class="tab-content">
+      <input id="search-santri" type="search"
+             placeholder="Cari nama santri..."
+             class="w-full mb-2"
+             aria-label="Cari santri">
+      <div class="chips mb-2" id="filter-santri-chips">
+        <div class="chip active-primary" data-filter="semua">Semua</div>
+        <div class="chip" data-filter="A">Kel.A</div>
+        <div class="chip" data-filter="B">Kel.B</div>
+        <div class="chip" data-filter="Dasar">Dasar</div>
+        <div class="chip" data-filter="Lanjut">Lanjut</div>
+      </div>
+      <div id="santri-list">Memuat...</div>
+      <button id="fab-tambah" class="btn btn-primary"
+              aria-label="Tambah santri baru">
+        + Tambah Santri
+      </button>
+    </div>
+
+    <!-- TAB LAPORAN -->
+    <div id="tab-laporan" class="tab-content">
+      <div id="laporan-absensi" class="card"></div>
+      <div id="laporan-spp" class="card"></div>
+      <div id="laporan-hafalan" class="card"></div>
+    </div>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 6. NAVBAR BAWAH                             -->
+  <!-- ═══════════════════════════════════════════ -->
+  <nav class="navbar" id="main-navbar">
+    <div class="nav-item active" data-tab="dashboard"
+         aria-label="Tab Dashboard">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Dashboard</span>
+    </div>
+    <div class="nav-item" data-tab="feed"
+         aria-label="Tab Feed">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Feed</span>
+    </div>
+    <div class="nav-item" data-tab="santri"
+         aria-label="Tab Santri">
+      <span class="nav-icon">👥</span>
+      <span class="nav-label">Santri</span>
+    </div>
+    <div class="nav-item" data-tab="laporan"
+         aria-label="Tab Laporan">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Laporan</span>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 7. BOTTOM SHEET ABSENSI                     -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="bottom-sheet-overlay" id="bs-absensi-overlay"></div>
+  <div class="bottom-sheet" id="bs-absensi">
+    <div class="sheet-handle"></div>
+    <div class="card-title mb-2">📋 Absensi Hari Ini</div>
+    <div id="bs-absensi-info" class="text-muted text-sm mb-2"></div>
+    <button class="btn btn-success mb-2" id="btn-semua-hadir">
+      ✅ Semua Hadir — 1 Tap Selesai
+    </button>
+    <div class="text-muted text-sm text-center mb-2">
+      atau tandai yang tidak hadir
+    </div>
+    <div id="bs-absensi-list">Memuat...</div>
+    <div class="btn-row mt-2">
+      <button class="btn btn-primary" id="btn-simpan-absensi">
+        💾 Simpan
+      </button>
+      <button class="btn btn-outline" id="btn-nanti-absensi">
+        Nanti Dulu
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 8. MODAL CATATAN BELAJAR (full screen)      -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-catatan">
+    <div class="modal-box"
+         style="max-width:100%;height:100%;border-radius:0;
+                overflow-y:auto;padding:20px">
+      <div class="modal-header">
+        <button id="btn-close-catatan" aria-label="Kembali">
+          ← Kembali
+        </button>
+        <span id="catatan-progress-label">0 belum dicatat</span>
+      </div>
+      <div class="flex-between mb-2">
+        <button id="btn-prev-santri" aria-label="Santri sebelumnya">◄</button>
+        <span id="catatan-santri-label">Nama Santri (1/6)</span>
+        <button id="btn-next-santri" aria-label="Santri berikutnya">►</button>
+      </div>
+      <div id="catatan-info-terakhir" class="text-muted text-sm mb-2"></div>
+      <div id="catatan-form-area">
+        Isi oleh app.js sesuai program santri
+      </div>
+      <div class="btn-row mt-3">
+        <button class="btn btn-primary" id="btn-simpan-catatan">
+          💾 Simpan &amp; Lanjut
+        </button>
+        <button class="btn btn-ghost" id="btn-skip-catatan">
+          Lewati
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 9. MODAL SPP                                -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-spp">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">💰 Input Pembayaran SPP</span>
+        <button class="modal-close" id="btn-close-spp"
+                aria-label="Tutup modal SPP">✕</button>
+      </div>
+      <div class="form-group">
+        <label for="spp-santri-select">Santri</label>
+        <select id="spp-santri-select"></select>
+      </div>
+      <div class="form-group">
+        <label for="spp-bulan-select">Bulan</label>
+        <select id="spp-bulan-select"></select>
+      </div>
+      <div class="form-group">
+        <label for="spp-nominal">Nominal (Rp)</label>
+        <input type="number" id="spp-nominal" value="100000">
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <div class="chips" id="spp-status-chips">
+          <div class="chip active-primary" data-val="lunas">Lunas</div>
+          <div class="chip" data-val="subsidi">Subsidi</div>
+          <div class="chip" data-val="infaq">+ Infaq</div>
+        </div>
+        <input type="hidden" id="spp-status" value="lunas">
+      </div>
+      <div class="form-group">
+        <label for="spp-metode">Metode</label>
+        <select id="spp-metode">
+          <option value="tunai">Tunai</option>
+          <option value="transfer">Transfer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="spp-keterangan">Keterangan (opsional)</label>
+        <input type="text" id="spp-keterangan">
+      </div>
+      <button class="btn btn-primary" id="btn-simpan-spp">
+        💾 Simpan
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 10. MODAL PROFIL SANTRI (full screen)       -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-profil">
+    <div class="modal-box"
+         style="max-width:100%;min-height:100%;border-radius:0;
+                overflow-y:auto">
+      <div class="modal-header">
+        <button id="btn-close-profil" aria-label="Kembali">
+          ← Kembali
+        </button>
+        <button id="btn-edit-santri" aria-label="Edit data santri">
+          ✏️ Edit
+        </button>
+      </div>
+      <div id="profil-content">Memuat...</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 11. MODAL FORM TAMBAH SANTRI                -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-tambah-santri">
+    <div class="modal-box" style="overflow-y:auto;max-height:92vh">
+      <div class="modal-header">
+        <span class="modal-title">👤 Daftarkan Santri Baru</span>
+        <button class="modal-close" id="btn-close-tambah-santri"
+                aria-label="Tutup form tambah santri">✕</button>
+      </div>
+      <div class="form-group">
+        <label for="santri-nama">Nama Lengkap *</label>
+        <input type="text" id="santri-nama" required>
+      </div>
+      <div class="form-group">
+        <label for="santri-no-hp">No. HP Santri</label>
+        <input type="tel" id="santri-no-hp" placeholder="628xxx">
+      </div>
+      <div class="form-group">
+        <label for="santri-kelompok">Kelompok *</label>
+        <select id="santri-kelompok">
+          <option value="A">Kelompok A</option>
+          <option value="B">Kelompok B</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="santri-level">Level *</label>
+        <select id="santri-level">
+          <option value="Dasar">Dasar</option>
+          <option value="Lanjut">Lanjut</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="santri-program">Program Utama *</label>
+        <select id="santri-program">
+          <option value="IQRA">Iqra</option>
+          <option value="THS">Tahsin</option>
+          <option value="THF">Tahfidz</option>
+          <option value="QRN">Tilawah</option>
+          <option value="TRB">Tarbiyah</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="santri-nama-ortu">Nama Orang Tua</label>
+        <input type="text" id="santri-nama-ortu">
+      </div>
+      <div class="form-group">
+        <label for="santri-no-hp-ortu">No. HP Orang Tua</label>
+        <input type="tel" id="santri-no-hp-ortu" placeholder="628xxx">
+      </div>
+      <div class="form-group">
+        <label for="santri-tgl-mulai">Tanggal Mulai</label>
+        <input type="date" id="santri-tgl-mulai">
+      </div>
+      <button class="btn btn-primary" id="btn-simpan-santri">
+        ✅ Daftarkan Santri
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 12. TOAST                                   -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="toast" class="toast"></div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 13. SCRIPTS                                 -->
+  <!-- ═══════════════════════════════════════════ -->
+  <script type="module" src="./app.js"></script>
+
+  <!-- 14. SERVICE WORKER REGISTRATION             -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log('SW registered'))
+        .catch(e => console.log('SW failed:', e));
+    }
+  </script>
+
+</body>
+</html>
