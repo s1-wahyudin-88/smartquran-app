@@ -14,6 +14,8 @@ const ASSETS_TO_CACHE = [
   './api.js',
   './engine.js',
   './manifest.json'
+  './icon-192.png',
+  './icon-512.png',
 ];
 
 // ── Event INSTALL ────────────────────────────────────────────
