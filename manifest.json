@@ -1,0 +1,55 @@
+{
+  "name": "Smart Quran — Ribath Iqra Izzul Islam",
+  "short_name": "Ribath Iqra",
+  "description": "Aplikasi manajemen santri Ribath Iqra Izzul Islam",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#1F4E79",
+  "background_color": "#F4F6F9",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Isi Absensi",
+      "short_name": "Absensi",
+      "description": "Langsung buka form absensi hari ini",
+      "url": "./?action=absensi",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Input SPP",
+      "short_name": "SPP",
+      "description": "Langsung buka form pembayaran SPP",
+      "url": "./?action=spp",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
