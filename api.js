@@ -8,7 +8,7 @@
 
 // ── KONSTANTA ────────────────────────────────────────────────
 
-export const API_URL = 'GANTI_DENGAN_URL_DEPLOYMENT_APPS_SCRIPT';
+export const API_URL = 'https://script.google.com/macros/s/AKfycbyQhlfFtPtAH5Gj0lZA7iowxvip-8ovo6Tqml-hsoWPeVwG_RXe0ph2fouAggI5JI3x/exec';
 const TIMEOUT_MS = 10000; // 10 detik
 
 // Key localStorage untuk offline queue dan cache
