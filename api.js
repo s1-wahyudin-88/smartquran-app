@@ -43,6 +43,16 @@ async function fetchWithTimeout(url, options = {}) {
   }
 }
 
+// POST ke Apps Script — pakai text/plain agar tidak trigger CORS preflight
+// Apps Script tidak bisa handle OPTIONS request dari browser
+async function postToAPI(body) {
+  return fetchWithTimeout(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(body)
+  });
+}
+
 // Memproses response HTTP dan melempar error jika ada masalah
 async function processResponse(response) {
   if (!response.ok) {
@@ -176,11 +186,7 @@ export async function flushOfflineQueue() {
 
   for (const item of queue) {
     try {
-      const response = await fetchWithTimeout(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: item.action, ...item.data })
-      });
+      const response = await postToAPI({ action: item.action, ...item.data });
       const result = await processResponse(response);
       if (!result || result.success === false) {
         // Jika gagal di sisi server, tetap masukkan ke remaining
@@ -352,11 +358,7 @@ export async function saveAktivitas(santriId, jenis, nilai, catatan = '', tangga
   }
 
   try {
-    const response = await fetchWithTimeout(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+    const response = await postToAPI(body);
     const result = await processResponse(response);
     // Invalidasi cache setelah write berhasil
     invalidateWriteCache();
@@ -384,11 +386,7 @@ export async function addSantri(data) {
   }
 
   try {
-    const response = await fetchWithTimeout(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+    const response = await postToAPI(body);
     const result = await processResponse(response);
     invalidateWriteCache();
     return result;
@@ -415,11 +413,7 @@ export async function updateSantri(santriId, perubahan) {
   }
 
   try {
-    const response = await fetchWithTimeout(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+    const response = await postToAPI(body);
     const result = await processResponse(response);
     invalidateWriteCache();
     return result;
