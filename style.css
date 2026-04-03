@@ -360,6 +360,13 @@ img {
 .chip.active-primary { background: var(--primary); color: var(--white); border-color: var(--primary); }
 .chip.active-accent  { background: var(--accent);  color: var(--white); border-color: var(--accent);  }
 
+.absensi-row-done .list-item-name {
+  color: var(--text-muted);
+}
+.absensi-row-done .avatar {
+  opacity: 0.6;
+}
+
 /* ── TOMBOL ───────────────────────────────────────────────── */
 .btn {
   display: block;
