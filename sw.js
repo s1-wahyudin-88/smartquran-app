@@ -13,7 +13,7 @@ const ASSETS_TO_CACHE = [
   './app.js',
   './api.js',
   './engine.js',
-  './manifest.json'
+  './manifest.json',
   './icon-192.png',
   './icon-512.png',
 ];
