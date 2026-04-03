@@ -536,14 +536,14 @@ function renderListAbsensi() {
   if (!container) return;
 
   const html = state.santriList.map(s => `
-    <div class="list-item" data-santri-id="${s.santri_id}">
+    <div class="list-item absensi-row" data-santri-id="${s.santri_id}">
       <div class="avatar avatar-a">${inisial(s.nama)}</div>
       <div class="list-item-content">
         <div class="list-item-name">${s.nama}</div>
         <div class="chips" style="margin:6px 0 0">
-          <button class="chip absensi-chip active-hadir" data-santri="${s.santri_id}" data-status="hadir">Hadir</button>
-          <button class="chip absensi-chip" data-santri="${s.santri_id}" data-status="izin">Izin</button>
-          <button class="chip absensi-chip" data-santri="${s.santri_id}" data-status="alpha">Alpha</button>
+          <button class="chip absensi-chip" data-santri="${s.santri_id}" data-status="hadir">✅ Hadir</button>
+          <button class="chip absensi-chip" data-santri="${s.santri_id}" data-status="izin">🟡 Izin</button>
+          <button class="chip absensi-chip" data-santri="${s.santri_id}" data-status="alpha">❌ Alpha</button>
         </div>
       </div>
     </div>`).join('');
@@ -552,26 +552,55 @@ function renderListAbsensi() {
 
   // Pasang event listener chip absensi
   container.querySelectorAll('.absensi-chip').forEach(chip => {
-    chip.addEventListener('click', (e) => {
+    chip.addEventListener('click', () => {
       const santriId = chip.dataset.santri;
       const status = chip.dataset.status;
-      // Hapus semua active di baris ini
+      // Reset semua chip di baris ini
       container.querySelectorAll(`.absensi-chip[data-santri="${santriId}"]`).forEach(c => {
         c.className = 'chip absensi-chip';
       });
       chip.classList.add(`active-${status}`);
+      // Tandai row sudah diisi
+      const row = container.querySelector(`.absensi-row[data-santri-id="${santriId}"]`);
+      row?.classList.add('absensi-row-done');
+      updateAbsensiCounter();
     });
   });
+
+  updateAbsensiCounter();
+}
+
+function updateAbsensiCounter() {
+  const total = state.santriList.length;
+  const sudahDipilih = document.querySelectorAll(
+    '.absensi-chip.active-hadir, .absensi-chip.active-izin, .absensi-chip.active-alpha'
+  ).length;
+  const belum = total - sudahDipilih;
+
+  const infoEl = document.getElementById('bs-absensi-info');
+  if (infoEl) {
+    infoEl.textContent = belum > 0
+      ? `${belum} santri belum dipilih statusnya`
+      : `✅ Semua ${total} santri sudah diisi`;
+    infoEl.style.color = belum > 0 ? 'var(--warning)' : 'var(--success)';
+  }
+
+  const btnSimpan = document.getElementById('btn-simpan-absensi');
+  if (btnSimpan) {
+    btnSimpan.disabled = belum > 0;
+    btnSimpan.style.opacity = belum > 0 ? '0.5' : '1';
+  }
 }
 
 function handleSemuaHadir() {
   document.querySelectorAll('.absensi-chip').forEach(chip => {
-    const santriId = chip.dataset.santri;
     chip.className = 'chip absensi-chip';
     if (chip.dataset.status === 'hadir') {
       chip.classList.add('active-hadir');
     }
   });
+  document.querySelectorAll('.absensi-row').forEach(row => row.classList.add('absensi-row-done'));
+  updateAbsensiCounter();
 }
 
 async function simpanAbsensi() {
