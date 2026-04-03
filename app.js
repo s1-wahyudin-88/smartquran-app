@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function initApp() {
   try {
     const data = await API.getSantri(true);
-    state.santriList = Array.isArray(data) ? data : (data.santri || []);
+    state.santriList = Array.isArray(data) ? data : (data.data || data.santri || []);
   } catch (err) {
     showToast('Gagal memuat data santri', 'error');
     state.santriList = [];
@@ -82,34 +82,33 @@ function initEventListeners() {
   // Header
   document.getElementById('btn-notif')?.addEventListener('click', openNotifPanel);
   document.getElementById('notif-overlay')?.addEventListener('click', closeNotifPanel);
-  document.getElementById('btn-close-notif')?.addEventListener('click', closeNotifPanel);
+  document.getElementById('btn-notif-close')?.addEventListener('click', closeNotifPanel);
 
   // Absensi
   document.getElementById('btn-semua-hadir')?.addEventListener('click', handleSemuaHadir);
   document.getElementById('btn-simpan-absensi')?.addEventListener('click', simpanAbsensi);
   document.getElementById('bs-absensi-overlay')?.addEventListener('click', () => closeBottomSheet('absensi'));
-  document.getElementById('btn-nanti-absensi')?.addEventListener('click', () => closeBottomSheet('absensi'));
 
   // Catatan
   document.getElementById('btn-simpan-catatan')?.addEventListener('click', simpanCatatan);
   document.getElementById('btn-skip-catatan')?.addEventListener('click', skipCatatan);
   document.getElementById('btn-prev-santri')?.addEventListener('click', () => navigasiSantri(-1));
   document.getElementById('btn-next-santri')?.addEventListener('click', () => navigasiSantri(1));
-  document.getElementById('btn-close-catatan')?.addEventListener('click', () => closeModal('modal-catatan'));
+  document.getElementById('modal-catatan-close')?.addEventListener('click', () => closeModal('modal-catatan'));
 
   // SPP
   document.getElementById('btn-simpan-spp')?.addEventListener('click', simpanSpp);
-  document.getElementById('btn-close-spp')?.addEventListener('click', () => closeModal('modal-spp'));
+  document.getElementById('modal-spp-close')?.addEventListener('click', () => closeModal('modal-spp'));
 
   // Santri
   document.getElementById('btn-simpan-santri')?.addEventListener('click', simpanTambahSantri);
   document.getElementById('btn-edit-santri')?.addEventListener('click', handleEditSantri);
   document.getElementById('fab-tambah')?.addEventListener('click', openFormTambahSantri);
   document.getElementById('search-santri')?.addEventListener('input', handleSearchSantri);
-  document.getElementById('btn-close-tambah-santri')?.addEventListener('click', () => closeModal('modal-tambah-santri'));
+  document.getElementById('modal-tambah-santri-close')?.addEventListener('click', () => closeModal('modal-tambah-santri'));
 
   // Profil
-  document.getElementById('btn-close-profil')?.addEventListener('click', () => closeModal('modal-profil'));
+  document.getElementById('modal-profil-close')?.addEventListener('click', () => closeModal('modal-profil'));
 
   // Bottom sheet overlay
   document.getElementById('bs-catatan-overlay')?.addEventListener('click', () => closeBottomSheet('catatan'));
@@ -944,14 +943,10 @@ function openModalSpp(santriId = null) {
   if (nominalEl) nominalEl.value = '100000';
 
   // Pasang chip status SPP
-  document.querySelectorAll('#spp-status-chips .chip').forEach(chip => {
+  document.querySelectorAll('.spp-status-chip').forEach(chip => {
     chip.addEventListener('click', () => {
-      document.querySelectorAll('#spp-status-chips .chip').forEach(c => {
-        c.classList.remove('active-primary');
-      });
+      document.querySelectorAll('.spp-status-chip').forEach(c => c.className = 'chip spp-status-chip');
       chip.classList.add('active-primary');
-      const hiddenStatus = document.getElementById('spp-status');
-      if (hiddenStatus) hiddenStatus.value = chip.dataset.val;
     });
   });
 }
@@ -962,8 +957,8 @@ async function simpanSpp() {
   const nominal = parseInt(document.getElementById('spp-nominal')?.value || 0);
   const metode = document.getElementById('spp-metode')?.value || 'tunai';
   const keterangan = document.getElementById('spp-keterangan')?.value || '';
-  const statusChip = document.querySelector('#spp-status-chips .chip.active-primary');
-  const status = statusChip?.dataset.val || document.getElementById('spp-status')?.value || 'lunas';
+  const statusChip = document.querySelector('.spp-status-chip.active-primary');
+  const status = statusChip?.dataset.val || 'lunas';
 
   if (!santriId) { showToast('Pilih santri terlebih dahulu', 'warning'); return; }
   if (status === 'belum') { showToast('Status tidak valid untuk disimpan', 'error'); return; }
@@ -1073,7 +1068,7 @@ async function initFeed(santriId = null) {
 
   try {
     const items = await API.getFeed(30, santriId);
-    const list = Array.isArray(items) ? items : (items.feed || []);
+    const list = Array.isArray(items) ? items : (items.data || items.feed || []);
 
     if (list.length === 0) {
       container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Belum ada aktivitas</div></div>`;
@@ -1170,11 +1165,11 @@ async function openProfilSantri(santriId) {
       API.getSppBulan(Engine.getBulanSekarang()).catch(() => [])
     ]);
 
-    const sppSantri = (Array.isArray(sppData) ? sppData : []).find(x => x.santri_id === santriId);
+    const sppSantri = (Array.isArray(sppData) ? sppData : (sppData.data || [])).find(x => x.santri_id === santriId);
     const persenHafal = progress?.persen || 0;
     const warnaHafal = Engine.getWarnaKehadiran(persenHafal);
     const warnaAbsensi = absensi ? Engine.getWarnaKehadiran(absensi.persen_hadir) : 'normal';
-    const hist = Array.isArray(history) ? history : [];
+    const hist = Array.isArray(history) ? history : (history.data || []);
 
     const el = document.getElementById('profil-content');
     if (!el) return;
@@ -1271,24 +1266,19 @@ async function simpanTambahSantri() {
   const validNama = Engine.validateNamaLengkap(nama);
   if (!validNama.valid) { showToast(validNama.error, 'error'); return; }
 
-  // No HP ortu opsional — hanya validasi jika diisi
-  let noHpOrtuNormalized = noHpOrtu;
-  if (noHpOrtu) {
-    const validHp = Engine.validateNomorHP(noHpOrtu);
-    if (!validHp.valid) { showToast(`No. HP Ortu: ${validHp.error}`, 'error'); return; }
-    noHpOrtuNormalized = validHp.normalized;
-  }
+  const validHp = Engine.validateNomorHP(noHpOrtu);
+  if (!validHp.valid) { showToast(`No. HP Ortu: ${validHp.error}`, 'error'); return; }
 
   const data = {
     nama, no_hp: noHp, kelompok, level, program,
-    nama_ortu: namaOrtu, no_hp_ortu: noHpOrtuNormalized, tgl_mulai: tglMulai
+    nama_ortu: namaOrtu, no_hp_ortu: validHp.normalized, tgl_mulai: tglMulai
   };
 
   showLoading('btn-simpan-santri', 'Menyimpan...');
   try {
     await API.addSantri(data);
     const newList = await API.getSantri(true);
-    state.santriList = Array.isArray(newList) ? newList : (newList.santri || []);
+    state.santriList = Array.isArray(newList) ? newList : (newList.data || newList.santri || []);
     closeModal('modal-tambah-santri');
     showToast(`${nama} berhasil didaftarkan ✅`, 'success');
 
@@ -1340,7 +1330,7 @@ function handleEditSantri() {
     try {
       await API.updateSantri(state.selectedSantriId, perubahan);
       const newList = await API.getSantri(true);
-      state.santriList = Array.isArray(newList) ? newList : (newList.santri || []);
+      state.santriList = Array.isArray(newList) ? newList : (newList.data || newList.santri || []);
       showToast('Data santri diperbarui ✅', 'success');
       openProfilSantri(state.selectedSantriId);
     } catch (err) {
@@ -1358,46 +1348,49 @@ function handleEditSantri() {
 // ══════════════════════════════════════════════════════════════
 
 async function initLaporan() {
-  // Render accordion ke masing-masing card yang sudah ada di index.html
-  const absensiEl = document.getElementById('laporan-absensi');
-  const sppEl = document.getElementById('laporan-spp');
-  const hafalanEl = document.getElementById('laporan-hafalan');
+  const container = document.getElementById('laporan-content');
+  if (!container) return;
 
-  if (absensiEl) absensiEl.innerHTML = `
-    <div class="card-header lap-accordion" data-target="lap-absensi-body" style="cursor:pointer">
-      <span class="card-title">📋 Rekap Absensi Bulan Ini</span>
-      <span>▼</span>
+  container.innerHTML = `
+    <div class="card" id="lap-absensi-section">
+      <div class="card-header lap-accordion" data-target="lap-absensi-body" style="cursor:pointer">
+        <span class="card-title">📋 Rekap Absensi Bulan Ini</span>
+        <span>▼</span>
+      </div>
+      <div id="lap-absensi-body" class="hidden"><div class="text-muted text-sm">Memuat...</div></div>
     </div>
-    <div id="lap-absensi-body" class="hidden"><div class="text-muted text-sm">Memuat...</div></div>`;
-
-  if (sppEl) sppEl.innerHTML = `
-    <div class="card-header lap-accordion" data-target="lap-spp-body" style="cursor:pointer">
-      <span class="card-title">💰 Status SPP Bulan Ini</span>
-      <span>▼</span>
+    <div class="card" id="lap-spp-section">
+      <div class="card-header lap-accordion" data-target="lap-spp-body" style="cursor:pointer">
+        <span class="card-title">💰 Status SPP Bulan Ini</span>
+        <span>▼</span>
+      </div>
+      <div id="lap-spp-body" class="hidden"><div class="text-muted text-sm">Memuat...</div></div>
     </div>
-    <div id="lap-spp-body" class="hidden"><div class="text-muted text-sm">Memuat...</div></div>`;
-
-  if (hafalanEl) hafalanEl.innerHTML = `
-    <div class="card-header lap-accordion" data-target="lap-hafalan-body" style="cursor:pointer">
-      <span class="card-title">📖 Progress Hafalan</span>
-      <span>▼</span>
+    <div class="card" id="lap-hafalan-section">
+      <div class="card-header lap-accordion" data-target="lap-hafalan-body" style="cursor:pointer">
+        <span class="card-title">📖 Progress Hafalan</span>
+        <span>▼</span>
+      </div>
+      <div id="lap-hafalan-body" class="hidden"><div class="text-muted text-sm">Memuat...</div></div>
     </div>
-    <div id="lap-hafalan-body" class="hidden"><div class="text-muted text-sm">Memuat...</div></div>
-    <div class="card-header lap-accordion" data-target="lap-aktivitas-body" style="cursor:pointer;margin-top:12px">
-      <span class="card-title">📊 Rekap Aktivitas 7 Hari</span>
-      <span>▼</span>
-    </div>
-    <div id="lap-aktivitas-body" class="hidden"><div class="text-muted text-sm">Memuat...</div></div>`;
+    <div class="card" id="lap-aktivitas-section">
+      <div class="card-header lap-accordion" data-target="lap-aktivitas-body" style="cursor:pointer">
+        <span class="card-title">📊 Rekap Aktivitas 7 Hari</span>
+        <span>▼</span>
+      </div>
+      <div id="lap-aktivitas-body" class="hidden"><div class="text-muted text-sm">Memuat...</div></div>
+    </div>`;
 
   // Accordion
-  document.querySelectorAll('.lap-accordion').forEach(header => {
+  container.querySelectorAll('.lap-accordion').forEach(header => {
     header.addEventListener('click', () => {
       const targetId = header.dataset.target;
       const body = document.getElementById(targetId);
       if (!body) return;
       const isOpen = !body.classList.contains('hidden');
       body.classList.toggle('hidden', isOpen);
-      if (!isOpen) loadLaporanSection(targetId);
+      if (!isOpen) return;
+      loadLaporanSection(targetId);
     });
   });
 }
@@ -1431,7 +1424,7 @@ async function loadLaporanSection(targetId) {
     el.innerHTML = `<div class="text-muted text-sm">Memuat data SPP...</div>`;
     try {
       const sppList = await API.getSppBulan(Engine.getBulanSekarang());
-      const list = Array.isArray(sppList) ? sppList : [];
+      const list = Array.isArray(sppList) ? sppList : (sppList.data || []);
       el.innerHTML = list.map(s => `
         <div class="list-item">
           <div class="avatar avatar-a">${inisial(s.nama)}</div>
@@ -1471,7 +1464,7 @@ async function loadLaporanSection(targetId) {
     el.innerHTML = `<div class="text-muted text-sm">Memuat aktivitas...</div>`;
     try {
       const feed = await API.getFeed(50);
-      const list = Array.isArray(feed) ? feed : (feed.feed || []);
+      const list = Array.isArray(feed) ? feed : (feed.data || feed.feed || []);
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - 7);
       const filtered = list.filter(f => new Date(f.tanggal) >= cutoff);
