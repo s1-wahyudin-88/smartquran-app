@@ -715,16 +715,20 @@ export function validateNomorHP(noHp) {
 }
 
 /**
- * Memvalidasi nama lengkap
+ * Validasi nama lengkap santri
  * @param {string} nama
  * @returns {{ valid: boolean, error: string|null }}
  */
 export function validateNamaLengkap(nama) {
-  if (!nama || nama.trim().length < 2) {
+  if (!nama || typeof nama !== 'string') {
+    return { valid: false, error: 'Nama tidak boleh kosong' };
+  }
+  const trimmed = nama.trim();
+  if (trimmed.length < 2) {
     return { valid: false, error: 'Nama minimal 2 karakter' };
   }
-  if (/^\d+$/.test(nama.trim())) {
-    return { valid: false, error: 'Nama tidak boleh hanya berisi angka' };
+  if (/^\d+$/.test(trimmed)) {
+    return { valid: false, error: 'Nama tidak boleh hanya angka' };
   }
   return { valid: true, error: null };
 }
